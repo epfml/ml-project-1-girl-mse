@@ -214,7 +214,7 @@ def calculate_logistic_gradient(y, tx, w):
         w:  shape=(D,)
 
     Returns:
-        a vector of shape (D, 1)
+        a vector of shape (D,)
 
     """
     # ***************************************************
