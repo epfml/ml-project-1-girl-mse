@@ -53,7 +53,7 @@ def add_bias_column(x_train, x_test):
 
     return x_train_pp, x_test_pp
 
-def balancing_data (x_train_pp, y_train_pp, neg_label=-1):
+def balancing_data (x_train_pp, y_train_pp, neg_label=-1, ratio_=3):
     """
     Creating a new training set with balanced data of both classes. 
     Since the class of values of 1 is smaller, it randomly samples the class of -1/0s to the length of 1s.
@@ -80,7 +80,7 @@ def balancing_data (x_train_pp, y_train_pp, neg_label=-1):
     y0 = y_train_pp[index0]
     
     # Randomly choosing the data from the class of -1/0 
-    ind_balanced = np.random.choice(np.arange(x0.shape[0]), N_class1) # now we have the same amount of people who didn't have a heart attack as the ones who did
+    ind_balanced = np.random.choice(np.arange(x0.shape[0]), N_class1*ratio_) # now we have the same amount of people who didn't have a heart attack as the ones who did
     x0_balanced = x0[ind_balanced]
     y0_balanced = y0[ind_balanced]
 
@@ -95,7 +95,97 @@ def balancing_data (x_train_pp, y_train_pp, neg_label=-1):
 
     return x_train_pp, y_train_pp
 
+def column_drop(x_train, x_test):
+    """
+    Droping columns that have a 50% of undefined values. 
+    Args:
+        x_train: original training set, shape=(N,D)
+        x_test: original test set, shape=(N1,D)
 
+    Output:
+        x_train_pp: training set with dropped columns, shape=(N,D*)
+        x_test_pp: test set with dropped columns, shape=(N1,D*)
+
+    """
+    x_train_pp = x_train.copy()
+    x_test_pp = x_test.copy()
+    ratio = np.isnan(x_train_pp).sum(axis=0) / x_train_pp.shape[0]
+    indexes = np.where(ratio <= 0.5)[0]
+    x_train_pp = x_train_pp[:, indexes]
+    x_test_pp = x_test_pp[:, indexes]
+
+    return x_train_pp, x_test_pp
+
+def correlated_column_drop(x_train, x_test, threshold):
+    """
+    Droping columns that are correlated more than the certain threshold. 
+    Args:
+        x_train: original training set, shape=(N,D)
+        x_test: original test set, shape=(N1,D)
+
+    Output:
+        x_train_pp: training set with dropped columns, shape=(N,D*)
+        x_test_pp: test set with dropped columns, shape=(N1,D*)
+
+    """
+    x_train_pp = x_train.copy()
+    x_test_pp = x_test.copy()
+    
+    correlation = np.corrcoef(x_train_pp, rowvar=False)
+    correlation = np.triu(correlation, k=1)
+    corr_cols = np.column_stack(np.where(np.abs(correlation)>threshold))
+    
+    dropped_columns = np.unique(corr_cols[:,-1])
+    x_train_pp = np.delete(x_train_pp, dropped_columns, 1)
+    x_test_pp = np.delete(x_test_pp, dropped_columns, 1)
+
+    return x_train_pp, x_test_pp
+
+def replace_w_median(x_train, x_test):
+    """
+    Replacing undefined values (NaN) with median value of the feature (column).
+    Args:
+        x_train: original training set, shape=(N,D)
+        x_test: original test set, shape=(N1,D)
+
+    Output:
+        x_train_pp: shape=(N,D)
+        x_test_pp: shape=(N1,D)
+
+    """
+    x_train_pp = x_train.copy()
+    x_test_pp = x_test.copy()
+
+    median_train = np.nanmedian(x_train_pp, axis=0)
+    nan_indices = np.isnan(x_train_pp)
+    x_train_pp[nan_indices] = median_train[np.where(nan_indices)[1]]
+
+    median_test = np.nanmedian(x_test_pp, axis=0)
+    nan_indices = np.isnan(x_test_pp)
+    x_test_pp[nan_indices] = median_test[np.where(nan_indices)[1]]
+
+    return x_train_pp, x_test_pp
+
+def standardize(x_train, x_test):
+
+    """
+    Standardization of data with respect to mean and variance of training set.
+    Args:
+        x_train: input data of training set, shape=(N,D)
+        x_test: input data of test set, shape=(N1,D)
+
+    Returns:
+        x_train_pp: shape=(N,D)
+        x_test_pp: shape=(N1,D)
+        
+    """
+    mean = np.mean(x_train, axis=0)
+    std_dev = np.std(x_train, axis=0)
+    
+    x_train_pp = (x_train - mean) / (std_dev+1e-7)
+    x_test_pp = (x_test - mean) / (std_dev+1e-7)
+
+    return x_train_pp, x_test_pp
 
 def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     """
@@ -114,37 +204,24 @@ def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     # relevant features: RFHYPE5, TOLDHI2, CHOLCHK, BMI5, SMOKE100, CVDSTRK3, DIABETE3, _TOTINDA, _FRTLT1, 
     # _VEGLT1, _RFDRHV5, HLTHPLN1, MEDCOST, GENHLTH, MENTHLTH, PHYSHLTH, DIFFWALK, SEX, _AGEG5YR, EDUCA, INCOME2
     #relevant_features_ind = [232, 38, 37, 253, 72, 39, 48, 284, 278, 279, 265, 30, 32, 26, 28, 27, 69, 50, 246, 257, 60]
-    #relevant_features_ind = [232, 38, 37, 253, 72, 48, 284, 278, 265, 30, 28, 27, 69, 50, 246]
-    relevant_features_ind = [232, 37, 253, 72, 48, 30, 28, 27, 50, 246]
 
     # Extraction of relevant features from input sets
-    x_train_pp = x_train[:, relevant_features_ind]
-    x_test_pp = x_test[:, relevant_features_ind]
+    x_train_pp = x_train.copy() #[:, relevant_features_ind]
+    x_test_pp = x_test.copy() #[:, relevant_features_ind]
+    y_train_pp = y_train.copy()
 
-    # Modify values
-    #x_train_pp = modify_values(x_train_pp)
-    #x_test_pp = modify_values(x_test_pp)
-    
-    # Adding a column of ones to add the bias term to the regression
-    x_train_pp, x_test_pp = add_bias_column(x_train_pp, x_test_pp)
-    
+    x_train_pp, x_test_pp = column_drop(x_train, x_test)
+    x_train_pp, x_test_pp = correlated_column_drop(x_train_pp, x_test_pp, 0.85)
+    x_train_pp, x_test_pp = replace_w_median(x_train_pp, x_test_pp)
+    x_train_pp, x_test_pp= standardize(x_train_pp, x_test_pp)
+
     # Replacing -1 with 0 in output if using logistic regression
     if(neg_label==0):
         y_train_pp = (y_train==1).astype(int)
     
-    # Removing rows with NaN values
-    y_train_pp = y_train_pp[~np.isnan(x_train_pp).any(axis=1)]
-    x_train_pp = x_train_pp[~np.isnan(x_train_pp).any(axis=1)]
+    # Adding a column of ones to add the bias term to the regression
+    x_train_pp, x_test_pp = add_bias_column(x_train_pp, x_test_pp)
 
-    # Standardization
-    #x_train_pp = (x_train_pp - x_train_pp.mean(axis=0))/(x_train_pp.std(axis=0)+1e-7)
-    #x_test_pp = (x_test_pp - x_train_pp.mean(axis=0))/(x_train_pp.std(axis=0)+1e-7)
-
-    # Balancing the data to the size of a smaller class
-    x_train_pp, y_train_pp = balancing_data(x_train_pp, y_train_pp, neg_label)
-
-    x_train_pp = build_poly(x_train_pp, 10)
-    x_test_pp = build_poly(x_test_pp, 10)
     return x_train_pp, x_test_pp, y_train_pp
 
 def modify_values(x_train_pp):

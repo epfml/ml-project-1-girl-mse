@@ -165,8 +165,8 @@ def ridge_regression(y, tx, lambda_):
     I = np.eye(tx.shape[1])
     lambdaI = 2 * N * lambda_* I
     
-    XtX_reg = tx.T @ tx + lambdaI
-    XtY = tx.T @ y
+    XtX_reg = np.dot(tx.T,tx) + lambdaI
+    XtY = np.dot(tx.T,y)
     w = np.linalg.solve(XtX_reg, XtY)
     loss = compute_mse_loss(y, tx, w)
 
@@ -183,7 +183,7 @@ def sigmoid(t):
         scalar or numpy array
 
     """
-    return np.divide(np.exp(t),(1+np.exp(t)))
+    return 1 / (1 + np.exp(-t))
 
 def calculate_logistic_loss(y, tx, w):
     """compute the cost by negative log likelihood.
@@ -201,9 +201,13 @@ def calculate_logistic_loss(y, tx, w):
     # INSERT YOUR CODE HERE
     # TODO
     N = len(y)
-    loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
-    loss /= N
-    return loss
+    #loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
+    #loss /= N
+    #return loss
+    return -np.mean(
+        5.66 * y * np.log(sigmoid(tx.dot(w))) + 0.54 * (1 - y) * (np.log(1 - sigmoid(tx.dot(w))))
+    )
+    
 
 def calculate_logistic_gradient(y, tx, w):
     """compute the gradient of loss.
@@ -221,7 +225,8 @@ def calculate_logistic_gradient(y, tx, w):
     # INSERT YOUR CODE HERE
     # TODO
     N = len(y)
-    grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
+    grad = -1.5*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + 0.9*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N #0.8
+    #grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
     # ***************************************************
     return grad
 
@@ -243,8 +248,9 @@ def logistic_regression_step(y, tx, w, gamma):
     # ***************************************************
     # INSERT YOUR CODE HERE
     # return loss, gradient, and Hessian: TODO
-    loss = calculate_logistic_loss(y, tx, w)
     w = w -  gamma*calculate_logistic_gradient(y, tx, w)
+    loss = calculate_logistic_loss(y, tx, w)
+
     # ***************************************************
     return loss, w
 
