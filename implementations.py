@@ -225,7 +225,7 @@ def calculate_logistic_gradient(y, tx, w):
     # INSERT YOUR CODE HERE
     # TODO
     N = len(y)
-    grad = -1.5*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + 0.9*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N #0.8
+    grad = -1.5*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + 0.85*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N #0.85
     #grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
     # ***************************************************
     return grad
