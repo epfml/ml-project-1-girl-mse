@@ -208,7 +208,6 @@ def calculate_logistic_loss(y, tx, w):
         5.66 * y * np.log(sigmoid(tx.dot(w))) + 0.54 * (1 - y) * (np.log(1 - sigmoid(tx.dot(w))))
     )
     
-
 def calculate_logistic_gradient(y, tx, w):
     """compute the gradient of loss.
 
@@ -230,7 +229,27 @@ def calculate_logistic_gradient(y, tx, w):
     # ***************************************************
     return grad
 
-   
+def calculate_logistic_gradient_tuning(y, tx, w, w0, w1):
+    """compute the gradient of loss when the classes have different weights.
+
+    Args:
+        y:  shape=(N,)
+        tx: shape=(N, D)
+        w:  shape=(D,)
+        w0: scalar, weight of class 0
+        w1: scalar, weight of class 1
+
+    Returns:
+        a vector of shape (D,)
+
+    """
+    # ***************************************************
+    # INSERT YOUR CODE HERE
+    # TODO
+    N = len(y)
+    grad = -w0*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + w1*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N # 1.5, 0.85
+    # ***************************************************
+    return grad
 
 def logistic_regression_step(y, tx, w, gamma):
     """returns the loss and updated weights according to gradient descent method.
@@ -277,11 +296,10 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         loss, w = logistic_regression_step(y, tx, w, gamma)
     loss = calculate_logistic_loss(y, tx, w)
     return w, loss
-
-    
-def reg_logistic_regression_step(y, tx, w, gamma, lambda_):
+   
+def reg_logistic_regression_step(y, tx, w, gamma, lambda_, w0, w1):
     """
-    Do one step of gradient descent, using the penalized logistic regression.
+    Do one step of gradient descent, using the penalized logistic regression, for different class weights.
     Return the loss and updated w.
 
     Args:
@@ -290,6 +308,8 @@ def reg_logistic_regression_step(y, tx, w, gamma, lambda_):
         w:  shape=(D,)
         gamma: scalar
         lambda_: scalar
+        w0: weight of class 0
+        w1: weight of class 1
 
     Returns:
         loss: scalar number
@@ -300,7 +320,7 @@ def reg_logistic_regression_step(y, tx, w, gamma, lambda_):
     # INSERT YOUR CODE HERE
     # return loss, gradient: TODO
     loss = calculate_logistic_loss(y, tx, w) + lambda_*np.linalg.norm(w)**2
-    grad = calculate_logistic_gradient(y, tx, w) + 2*lambda_*w
+    grad = calculate_logistic_gradient_tuning(y, tx, w, w0, w1) + 2*lambda_*w
     # ***************************************************
     # ***************************************************
     # INSERT YOUR CODE HERE
@@ -332,7 +352,37 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     w = initial_w
     for iter in range(max_iters):
         # get loss and update w
-        w, loss = reg_logistic_regression_step(y, tx, w, gamma, lambda_)
+        w, loss = reg_logistic_regression_step(y, tx, w, gamma, lambda_, 1, 1)
+    # the final loss with final weights (without the penalty term)
+    loss = calculate_logistic_loss(y, tx, w) 
+
+    return w, loss
+
+def reg_logistic_regression_tuning(y, tx, lambda_, initial_w, max_iters, gamma, w0, w1):
+    """
+    Does the gradient descent method of finding optimal values w, on logistic loss with class weights
+    using l2 regression, starting from initial_w in max number of iterations that are given. 
+    Returns final values of weights and loss (without penalty term).
+
+    Args:
+        y:  shape=(N,)
+        tx: shape=(N, D)
+        lambda_: scalar
+        initial_w:  shape=(D,)
+        max_iters: integer
+        gamma: scalar
+        w0: weight of class 0
+        x1: weight of class 1
+
+    Returns: 
+        w: shape=(D,)
+        loss: scalar 
+
+    """
+    w = initial_w
+    for iter in range(max_iters):
+        # get loss and update w
+        w, loss = reg_logistic_regression_step(y, tx, w, gamma, lambda_, w0, w1)
     # the final loss with final weights (without the penalty term)
     loss = calculate_logistic_loss(y, tx, w) 
 
