@@ -134,7 +134,7 @@ def best_cv_ridge_reg(y, x, k_fold, lambdas):
     return best_lambda, best_acc, best_weights, best_f1
 
 # Cross validation for logistic and penalized logistic regression
-def cross_validation_log_reg(y, x, k_indices, k, gamma, lambda_, max_iters):
+def cross_validation_log_reg(y, x, k_indices, k, gamma, lambda_, max_iters, w0, w1):
     """
     Function that performs a single cross validation on kth fold and outputs the weights obtained by least squares 
     with ridge reguralization method and accuracy for that fold.
@@ -163,7 +163,7 @@ def cross_validation_log_reg(y, x, k_indices, k, gamma, lambda_, max_iters):
 
     initial_w = np.zeros((x_tr.shape[1],))
     # Fitting the model of logistic regression to the data
-    w, loss = reg_logistic_regression(y_tr, x_tr, lambda_, initial_w, max_iters, gamma)
+    w, loss = reg_logistic_regression_tuning(y_tr, x_tr, lambda_, initial_w, max_iters, gamma, w0, w1)
 
     # Calculating accuracy of model on test data
     prediction = np.array([0 if sigmoid(x.T @ w) < 0.5 else 1 for x in x_te])
@@ -172,7 +172,7 @@ def cross_validation_log_reg(y, x, k_indices, k, gamma, lambda_, max_iters):
 
     return w, acc, f1
 
-def best_cv_log_reg(y, x, k_fold, lambdas, gammas, max_iters):
+def best_cv_log_reg(y, x, k_fold, lambdas, gammas, max_iters, w0, w1):
     """
     Cross validation to estimate accuracy of model for different values of lambda parameter in ridge regression.
 
@@ -194,31 +194,36 @@ def best_cv_log_reg(y, x, k_fold, lambdas, gammas, max_iters):
     best_gamma = 0
     best_lambda = 0
     best_weights = []
+    best_w0 = 0
+    best_w1 = 0
 
-    for ind_l, lambda_ in enumerate(lambdas):
-        for ind_g, gamma in enumerate(gammas):
+    for i in range(len(w0)):
+        for ind_l, lambda_ in enumerate(lambdas):
+            for ind_g, gamma in enumerate(gammas):
 
-            k_fold_accuracy = 0
-            f1_score_k = 0
+                k_fold_accuracy = 0
+                f1_score_k = 0
 
-            # K fold crossvalidation to compute average accuracy for that specific lambda_
-            for k in range(k_fold):
-                w, acc, f1 = cross_validation_log_reg(y, x, indices, k, gamma, lambda_, max_iters)
-                k_fold_accuracy += acc
-                f1_score_k += f1
+                # K fold crossvalidation to compute average accuracy for that specific lambda_
+                for k in range(k_fold):
+                    w, acc, f1 = cross_validation_log_reg(y, x, indices, k, gamma, lambda_, max_iters, w0[i], w1[i])
+                    k_fold_accuracy += acc
+                    f1_score_k += f1
 
-            # Average accuracy
-            k_fold_accuracy /= k_fold
-            f1_score_k /= k_fold
+                # Average accuracy
+                k_fold_accuracy /= k_fold
+                f1_score_k /= k_fold
 
-            if(f1_score_k > best_f1):
-                best_acc= k_fold_accuracy
-                best_f1= f1_score_k
-                best_gamma = gamma
-                best_lambda = lambda_
+                if(f1_score_k > best_f1):
+                    best_acc= k_fold_accuracy
+                    best_f1= f1_score_k
+                    best_gamma = gamma
+                    best_lambda = lambda_
+                    best_w0 = w0[i]
+                    best_w1 = w1[i]
 
     initial_w = np.zeros((x.shape[1],))
-    best_weights, _ = reg_logistic_regression(y, x, best_lambda, initial_w, max_iters, best_gamma)
+    best_weights, _ = reg_logistic_regression_tuning(y, x, best_lambda, initial_w, max_iters, best_gamma, best_w0, best_w1)
 
-    return best_lambda, best_gamma, best_acc, best_weights, best_f1
+    return best_lambda, best_gamma, best_acc, best_weights, best_f1, best_w0, best_w1
 

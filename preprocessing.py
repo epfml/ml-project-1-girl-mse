@@ -98,7 +98,7 @@ def balancing_data (x_train_pp, y_train_pp, neg_label=-1, ratio_=3):
 
 def column_drop(x_train, x_test):
     """
-    Droping columns that have a 50% of undefined values. 
+    Droping columns that have a 25% of undefined values. 
     Args:
         x_train: original training set, shape=(N,D)
         x_test: original test set, shape=(N1,D)
@@ -112,7 +112,7 @@ def column_drop(x_train, x_test):
     x_test_pp = x_test.copy()
     ratio = np.isnan(x_train_pp).sum(axis=0) / x_train_pp.shape[0]
     # Indexes we should keep
-    indexes = np.where(ratio <= 0.5)[0]
+    indexes = np.where(ratio <= 0.25)[0]
     x_train_pp = x_train_pp[:, indexes]
     x_test_pp = x_test_pp[:, indexes]
 
@@ -277,6 +277,77 @@ def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     
     # Expansion of pairs
     #x_train_pp, x_test_pp = expand_pairs(x_train_pp, x_test_pp, 10)
+    
+    # Adding a column of ones to add the bias term to the regression
+    x_train_pp, x_test_pp = add_bias_column(x_train_pp, x_test_pp)
+
+    return x_train_pp, x_test_pp, y_train_pp
+
+def preprocess_data_relevant(x_train, y_train, x_test, neg_label=-1):
+    """
+    Function that preprocesses the training and test data. 
+    The function performs the following transformations over our data:
+
+    - extracting relevant features, as taken from this reference: 
+    - dropping columns that are correlated more than a certain threshold:
+    - replacing the rest of invalid values with median
+    - standardization of data
+    - adding the column of zeros to produce a bias term in weights
+
+    ********** ALTERNATEVLY: ************
+    - expansion of the feature set by adding polinomial values of features
+    - expansion using multiplied pairs of a random set of columns
+    
+    Since the test set takes values {-1,1} and our functions implement logistic regression for values {0,1} -1 are replaced with 0.
+
+    Args:
+        x_train: original training set, shape=(N,D)
+        y_train: outputs of training set, shape(N,)
+        x_test: test set, shape=(Ntest, D)
+        neg_label: integer that represents the label of negative class, either -1 or 0
+
+    Output:
+        x_train_pp: preprocessed training set, shape=(N, D*)
+        x_test_pp: preprocessed test set, shape=(Ntest, D*)
+        y_train_pp: preprocessed output training vector, shape=(N,)
+    """
+    # relevant features: RFHYPE5, TOLDHI2, CHOLCHK, BMI5, SMOKE100, CVDSTRK3, DIABETE3, _TOTINDA, _FRTLT1, 
+    # _VEGLT1, _RFDRHV5, HLTHPLN1, MEDCOST, GENHLTH, MENTHLTH, PHYSHLTH, DIFFWALK, SEX, _AGEG5YR, EDUCA, INCOME2
+    relevant_features_ind = [232, 38, 37, 253, 72, 39, 48, 284, 278, 279, 265, 30, 32, 26, 28, 27, 69, 50, 246, 257, 60]
+    relevant_features_ind = np.sort(relevant_features_ind)
+
+    # Extraction of relevant features from input sets
+    #x_train_pp = x_train.copy()  #[:, relevant_features_ind] 
+    #x_test_pp = x_test.copy()
+    #y_train_pp = y_train.copy()
+
+    x_train_pp = x_train[:, relevant_features_ind] 
+    x_test_pp = x_test[:, relevant_features_ind] 
+    y_train_pp = y_train.copy()
+
+    # Dropping the columns with invalid values
+    #x_train_pp, x_test_pp = column_drop(x_train_pp, x_test_pp)
+    x_train_pp = modify_values(x_train_pp)
+    x_test_pp = modify_values(x_test_pp)
+
+    # Dropping the correlated columns
+    x_train_pp, x_test_pp = correlated_column_drop(x_train_pp, x_test_pp, 0.85)
+
+    # Replacement of the rest of invalid values with column median
+    x_train_pp, x_test_pp = replace_w_median(x_train_pp, x_test_pp)
+
+    # Standardization of data
+    x_train_pp, x_test_pp= standardize(x_train_pp, x_test_pp)
+
+    # Replacing -1 with 0 in output if using logistic regression
+    if(neg_label==0):
+        y_train_pp = (y_train==1).astype(int)
+    
+    # Build polynomial
+    x_train_pp = build_poly(x_train_pp, 3)
+    x_test_pp = build_poly(x_test_pp, 3)
+    # Expansion of pairs
+    x_train_pp, x_test_pp = expand_pairs(x_train_pp, x_test_pp, 10)
     
     # Adding a column of ones to add the bias term to the regression
     x_train_pp, x_test_pp = add_bias_column(x_train_pp, x_test_pp)
