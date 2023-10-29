@@ -15,12 +15,12 @@ Elena Mrdja: @elena-mrdja
 
 ### Guidelines:
 
-The project report MLProject1.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py: containing the functions for data preprocessing), implementations.py: containing the functions for the 6 machine learning models, and utils.py: containing the additional functions we used in model training and validation
+The project report MLProject1.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py: containing the functions for data preprocessing, implementations.py: containing the functions for the 6 machine learning models, and utils.py: containing the additional functions we used in model training and validation
 
 In order to reproduce the results of the project, place your files for training and testing into a folder called dataset_to_release which is placed inside the folder called resources. Alternatively, change the input file path on line 9 in the run.py script to the location of the data.
 
 ### The Project:
-The aim of this project is to implement basic Machine learning models such as Linear, Ridge, and Logistic regression, in order to use them to predict whether a person is at a high risk for developing a Myocardial Infarct or Coronary Heart Disease (MICHD). Since the BRFSS dataset which was used in this project contains many missing values as well as features with non-informative entries, the success of the Machine Learning models heavily relied on data preprocessing. The final result of our project was obtained using Regularized Logistic Regression on the preprocessed data, which resulted in a validation accuracy of 0.847 and an F1 score of 0.413.
+The aim of this project is to implement basic Machine learning models such as Linear, Ridge, and Logistic regression, in order to use them to predict whether a person is at high risk for developing a Myocardial Infarct or Coronary Heart Disease (MICHD). Since the BRFSS dataset which was used in this project contains many missing values as well as features with non-informative entries, the success of the Machine Learning models heavily relied on data preprocessing. The final result of our project was obtained using Regularized Logistic Regression on the preprocessed data, which resulted in a validation accuracy of 0.847 and an F1 score of 0.413.
 
 ### Folder structure:
 ```
