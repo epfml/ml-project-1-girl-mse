@@ -1,6 +1,5 @@
 import numpy as np
 
-#*********************** functions that do the data preprocessing *****************************
 
 def build_poly_column(data, index, degree):
     """polynomial basis functions for input data x, for j=0 up to j=degree.
@@ -79,21 +78,16 @@ def balancing_data (x_train_pp, y_train_pp, neg_label=-1, ratio_=3):
     x0 = x_train_pp[index0]
     y1 = y_train_pp[index1]
     y0 = y_train_pp[index0]
-    
-    # Randomly choosing the data from the class of -1/0 
-    ind_balanced = np.random.choice(np.arange(x0.shape[0]), N_class1*ratio_) # now we have the same amount of people who didn't have a heart attack as the ones who did
-    x0_balanced = x0[ind_balanced]
-    y0_balanced = y0[ind_balanced]
 
     # Creating the new train and test set from separate 1s and -1/0s
-    x_train_pp = np.concatenate((x0_balanced,x1), axis=0)
-    y_train_pp = np.concatenate((y0_balanced, y1))
-
+    x_train_pp = np.concatenate((x_train_pp,x1), axis=0)
+    y_train_pp = np.concatenate((y_train_pp, y1))
     # Shuffling the data to prevent overfitting to a certain class
+    np.random.seed(1)
     ind_shuffled = np.random.permutation(np.arange(x_train_pp.shape[0]))
     x_train_pp = x_train_pp[ind_shuffled]
     y_train_pp = y_train_pp[ind_shuffled]
-
+    
     return x_train_pp, y_train_pp
 
 def column_drop(x_train, x_test):
@@ -112,7 +106,7 @@ def column_drop(x_train, x_test):
     x_test_pp = x_test.copy()
     ratio = np.isnan(x_train_pp).sum(axis=0) / x_train_pp.shape[0]
     # Indexes we should keep
-    indexes = np.where(ratio <= 0.25)[0]
+    indexes = np.where(ratio <= 0.75)[0]
     x_train_pp = x_train_pp[:, indexes]
     x_test_pp = x_test_pp[:, indexes]
 
@@ -220,6 +214,87 @@ def expand_pairs(x_train, x_test, num_to_mul):
 
     return poly, poly_test
 
+def remove_missing(x):
+    """
+    Sets invalid data values to np.nan according to the Codebook.
+
+    Args:
+        x: data to replace invalid values with
+    """
+    set_invalid_data_as_nan(x, 7)
+    set_invalid_data_as_nan(x, 9)
+    set_invalid_data_as_nan(x, 77)
+    set_invalid_data_as_nan(x, 99)
+    set_invalid_data_as_nan(x, 777)
+    set_invalid_data_as_nan(x, 999)
+
+def set_invalid_data_as_nan(x, invalid_value):
+    """
+    Sets invalid data values to np.nan
+    Args:
+        x: data to replace invalid values with
+        invalid_value: 
+    """
+    x[x == invalid_value] = np.nan
+
+def adapt_outliers_per_column_median(x):
+    """
+    Adapts outliers' values to median +/- 1.5 IQR (difference between 25th and 75th percentile) 
+    times standard deviation of each column.
+
+    Args:
+        data: shape=(N,)
+        m:    scalar, number of standard deviations from mean (boundary for outliers)
+    """
+    data_mean = np.median(x)
+    data_per25 = np.percentile(x, 2)
+    data_per75 = np.percentile(x, 98)
+    
+    iqr = data_per75-data_per25
+    max_value = 1.5*iqr + data_per75
+    min_value = data_per25 - 1.5*iqr
+
+    x[x > max_value] = max_value
+    x[x < min_value] = min_value
+
+def adapt_outliers_per_column_mean(x, m=1):
+    """Adapts outliers' values to mean +/- m times standard deviation of each column.
+    Args:
+        data: shape=(N,)
+        m:    scalar, number of standard deviations from mean (boundary for outliers)
+    """
+    data_mean = np.mean(x)
+    data_std = np.std(x)
+
+    max_value = data_mean + m * data_std
+    min_value = data_mean - m * data_std
+
+    x[x - data_mean > m * data_std] = max_value
+    x[x - data_mean < -m * data_std] = min_value
+
+def adapt_outliers(input_data):
+    """Removes outliers from input_data."""
+    np.apply_along_axis(adapt_outliers_per_column_mean, 0, input_data)
+
+def build_k_indices(y, k_fold):
+    """build k indices for k-fold.
+
+    Args:
+        y:      shape=(N,)
+        k_fold: K in K-fold, i.e. the fold num
+
+    Returns:
+        A 2D array of shape=(k_fold, N/k_fold) that indicates the data indices for each fold
+
+    """
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(894500)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval : (k + 1) * interval] for k in range(k_fold)]
+
+    return np.array(k_indices)
+
 def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     """
     Function that preprocesses the training and test data. 
@@ -229,7 +304,7 @@ def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     - dropping columns that are correlated more than a certain threshold
     - replacing the rest of invalid values with median
     - standardization of data
-    - adding the column of zeros to produce a bias term in weights
+    - adding the column of ones to produce a bias term in weights
 
     ********** ALTERNATEVLY: ************
     The function could also work with several exctracted valid features as taken from this reference:
@@ -249,15 +324,15 @@ def preprocess_data(x_train, y_train, x_test, neg_label=-1):
         x_test_pp: preprocessed test set, shape=(Ntest, D*)
         y_train_pp: preprocessed output training vector, shape=(N,)
     """
-    # relevant features: RFHYPE5, TOLDHI2, CHOLCHK, BMI5, SMOKE100, CVDSTRK3, DIABETE3, _TOTINDA, _FRTLT1, 
-    # _VEGLT1, _RFDRHV5, HLTHPLN1, MEDCOST, GENHLTH, MENTHLTH, PHYSHLTH, DIFFWALK, SEX, _AGEG5YR, EDUCA, INCOME2
-    #relevant_features_ind = [232, 38, 37, 253, 72, 39, 48, 284, 278, 279, 265, 30, 32, 26, 28, 27, 69, 50, 246, 257, 60]
-    #relevant_features_ind = np.sort(relevant_features_ind)
-
+    
     # Extraction of relevant features from input sets
     x_train_pp = x_train.copy()  #[:, relevant_features_ind] 
     x_test_pp = x_test.copy()
     y_train_pp = y_train.copy()
+
+    # Removing missing values (refer to the Codebook) with nan
+    remove_missing(x_train_pp)
+    remove_missing(x_test_pp)
 
     # Dropping the columns with invalid values
     x_train_pp, x_test_pp = column_drop(x_train_pp, x_test_pp)
@@ -268,6 +343,9 @@ def preprocess_data(x_train, y_train, x_test, neg_label=-1):
     # Replacement of the rest of invalid values with column median
     x_train_pp, x_test_pp = replace_w_median(x_train_pp, x_test_pp)
 
+    # Outliers handling
+    adapt_outliers(x_train_pp)
+    adapt_outliers(x_test_pp)
     # Standardization of data
     x_train_pp, x_test_pp= standardize(x_train_pp, x_test_pp)
 
@@ -288,8 +366,9 @@ def preprocess_data_relevant(x_train, y_train, x_test, neg_label=-1):
     Function that preprocesses the training and test data. 
     The function performs the following transformations over our data:
 
-    - extracting relevant features, as taken from this reference: 
-    - dropping columns that are correlated more than a certain threshold:
+    - extracting relevant features, inspiration taken from this reference: 
+    https://www.researchgate.net/publication/361592761_A_Comparative_Study_of_Heart_Disease_Prediction_Using_Machine_Learning_Techniques
+    - dropping columns that are correlated more than a certain threshold
     - replacing the rest of invalid values with median
     - standardization of data
     - adding the column of zeros to produce a bias term in weights
@@ -335,7 +414,10 @@ def preprocess_data_relevant(x_train, y_train, x_test, neg_label=-1):
 
     # Replacement of the rest of invalid values with column median
     x_train_pp, x_test_pp = replace_w_median(x_train_pp, x_test_pp)
-
+    
+    adapt_outliers(x_train_pp)
+    adapt_outliers(x_test_pp)
+    
     # Standardization of data
     x_train_pp, x_test_pp= standardize(x_train_pp, x_test_pp)
 

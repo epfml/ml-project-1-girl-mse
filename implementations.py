@@ -2,7 +2,6 @@
 import numpy as np
 
 # First we have to define the function that computes the MSE loss
-
 def compute_mse_loss(y, tx, w):
     """
     Computes the MSE loss.
@@ -174,7 +173,8 @@ def ridge_regression(y, tx, lambda_):
 
 # Helping functions for calculating logistic regression 
 def sigmoid(t):
-    """apply sigmoid function on t.
+    """
+    Applies sigmoid function on t.
 
     Args:
         t: scalar or numpy array
@@ -186,8 +186,8 @@ def sigmoid(t):
     return 1 / (1 + np.exp(-t))
 
 def calculate_logistic_loss(y, tx, w):
-    """compute the cost by negative log likelihood.
-    Implementation changed from the ones in labs to fit the vector implementation requirements of the project.
+    """
+    Computes the cost by negative log likelihood.
     Args:
         y:  shape=(N,)
         tx: shape=(N, D)
@@ -201,15 +201,13 @@ def calculate_logistic_loss(y, tx, w):
     # INSERT YOUR CODE HERE
     # TODO
     N = len(y)
-    #loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
-    #loss /= N
-    #return loss
-    return -np.mean(
-        5.66 * y * np.log(sigmoid(tx.dot(w))) + 0.54 * (1 - y) * (np.log(1 - sigmoid(tx.dot(w))))
-    )
+    loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
+    loss /= N
+    return loss
     
 def calculate_logistic_gradient(y, tx, w):
-    """compute the gradient of loss.
+    """
+    Computes the gradient of logistic loss.
 
     Args:
         y:  shape=(N,)
@@ -224,13 +222,13 @@ def calculate_logistic_gradient(y, tx, w):
     # INSERT YOUR CODE HERE
     # TODO
     N = len(y)
-    grad = -1.5*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + 0.85*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N #0.85
-    #grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
+    grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
     # ***************************************************
     return grad
 
 def calculate_logistic_gradient_tuning(y, tx, w, w0, w1):
-    """compute the gradient of loss when the classes have different weights.
+    """
+    Computes the gradient of loss when the classes have different weights.
 
     Args:
         y:  shape=(N,)
@@ -251,8 +249,9 @@ def calculate_logistic_gradient_tuning(y, tx, w, w0, w1):
     # ***************************************************
     return grad
 
-def logistic_regression_step(y, tx, w, gamma):
-    """returns the loss and updated weights according to gradient descent method.
+def logistic_regression_step(y, tx, w, gamma):  
+    """
+    Returns the loss and updated weights according to gradient descent method.
 
     Args:
         y:  shape=(N,)
