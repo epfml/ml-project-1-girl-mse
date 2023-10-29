@@ -310,7 +310,7 @@ def reg_logistic_regression_step(y, tx, w, gamma, lambda_, w0, w1):
     """
 
     loss = calculate_logistic_loss(y, tx, w) + lambda_*np.linalg.norm(w)**2
-    grad = calculate_logistic_gradient_tuning(y, tx, w, w0, w1) + 2*lambda_*w
+    grad = calculate_logistic_gradient(y, tx, w) + 2*lambda_*w
     # ***************************************************
     # ***************************************************
 
