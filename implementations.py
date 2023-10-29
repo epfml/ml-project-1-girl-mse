@@ -68,7 +68,7 @@ def mean_squared_error_gd(y, tx, initial_w,  max_iters, gamma):
         ws.append(w)
         losses.append(loss)
     
-    loss = compute_mse_loss(y, tx, w)
+    loss = compute_mse_loss(y, tx, w).item()
 
     return ws[-1], loss
 
