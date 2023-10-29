@@ -197,9 +197,7 @@ def calculate_logistic_loss(y, tx, w):
         a non-negative loss
 
     """
-    # ***************************************************
-    # INSERT YOUR CODE HERE
-    # TODO
+
     N = len(y)
     loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
     loss /= N
@@ -219,8 +217,6 @@ def calculate_logistic_gradient(y, tx, w):
 
     """
     # ***************************************************
-    # INSERT YOUR CODE HERE
-    # TODO
     N = len(y)
     grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
     # ***************************************************
@@ -242,8 +238,6 @@ def calculate_logistic_gradient_tuning(y, tx, w, w0, w1):
 
     """
     # ***************************************************
-    # INSERT YOUR CODE HERE
-    # TODO
     N = len(y)
     grad = -w0*np.dot(tx.T,(1-sigmoid(np.dot(tx,w)))*y)/N + w1*np.dot(tx.T,(1-y)*sigmoid(np.dot(tx,w)))/N # 1.5, 0.85
     # ***************************************************
@@ -264,8 +258,7 @@ def logistic_regression_step(y, tx, w, gamma):
    
     """
     # ***************************************************
-    # INSERT YOUR CODE HERE
-    # return loss, gradient, and Hessian: TODO
+    # return loss, gradient, and Hessian:
     w = w -  gamma*calculate_logistic_gradient(y, tx, w)
     loss = calculate_logistic_loss(y, tx, w)
 
@@ -315,15 +308,12 @@ def reg_logistic_regression_step(y, tx, w, gamma, lambda_, w0, w1):
         w: shape=(D,)
 
     """
-    # ***************************************************
-    # INSERT YOUR CODE HERE
-    # return loss, gradient: TODO
+
     loss = calculate_logistic_loss(y, tx, w) + lambda_*np.linalg.norm(w)**2
     grad = calculate_logistic_gradient_tuning(y, tx, w, w0, w1) + 2*lambda_*w
     # ***************************************************
     # ***************************************************
-    # INSERT YOUR CODE HERE
-    # update w: TODO
+
     w = w - gamma*grad
     # ***************************************************
     return w, loss
