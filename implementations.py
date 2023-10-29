@@ -15,9 +15,9 @@ def compute_mse_loss(y, tx, w):
         loss: scalar
     """
     error = y - np.dot(tx, w)
-    loss = 1/(2*np.shape(error)[0])*np.dot(error.T, error)
+    loss = 1/(2*np.shape(error)[0])*np.dot(error.T, error)[0,0]
     
-    return loss.item()
+    return loss
 
 # Function that computes the gradient
 def compute_gradient(y, tx, w):
@@ -69,9 +69,8 @@ def mean_squared_error_gd(y, tx, initial_w,  max_iters, gamma):
         losses.append(loss)
     
     loss = compute_mse_loss(y, tx, w)
-    w = ws[-1].flatten()
 
-    return w, loss
+    return ws[-1], loss
 
 # For stochastic gradient we only need one additional function
 def compute_stoch_gradient(y, tx, w):
