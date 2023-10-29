@@ -14,6 +14,8 @@ def compute_mse_loss(y, tx, w):
     Returns:
         loss: scalar
     """
+    assert y.shape[0] == tx.shape[0]
+    assert tx.shape[1] == w.shape[0]
     error = y - np.dot(tx, w)
     loss = 1/(2*np.shape(error)[0])*np.dot(error.T, error)
     
@@ -32,6 +34,8 @@ def compute_gradient(y, tx, w):
     Returns:
         grad: vector of shape=(D,)
     """
+    assert y.shape[0] == tx.shape[0]
+    assert tx.shape[1] == w.shape[0]
     error = y - np.dot(tx, w)
     grad = (-1/np.shape(error)[0])*np.dot(tx.T, error)
     
