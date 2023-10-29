@@ -15,7 +15,7 @@ Elena Mrdja: @elena-mrdja
 
 ### Guidelines:
 
-The project report MLProject.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py: containing the functions for data preprocessing), implementations.py: containing the functions for the 6 machine leaning models, and utils.py: containing the additional functions we used in model training and validation
+The project report MLProject1.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py: containing the functions for data preprocessing), implementations.py: containing the functions for the 6 machine leaning models, and utils.py: containing the additional functions we used in model training and validation
 
 In order to reproduce the results of the project, place your files for training and testing should into a folder called dataset_to_release which is placed inside the folder called resources. Alternatively, change the input filepath on the line 9 in the run.py to the location of the data.
 
