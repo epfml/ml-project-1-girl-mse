@@ -15,7 +15,7 @@ Elena Mrdja: @elena-mrdja
 
 ### Guidelines:
 
-The project report MLProject.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py (containing the functions for data preprocessing), implementations.py (containing the functions for the 6 machine leaning models), and utils.py: containing the additional functions we used in model training and validation)
+The project report MLProject.pdf contains the full description of the project. The code for our project has been divided into preprocessing.py: containing the functions for data preprocessing), implementations.py: containing the functions for the 6 machine leaning models, and utils.py: containing the additional functions we used in model training and validation
 
 In order to run this project, the files for training and testing should be placed into a folder called resources with the names train.csv and test.csv
 
