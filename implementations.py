@@ -198,10 +198,10 @@ def calculate_logistic_loss(y, tx, w):
 
     """
 
-    N = len(y)
-    loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
-    loss /= N
-    return loss.item()
+    #N = len(y)
+    #loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
+    #loss /= N
+    return -np.mean(y*np.log(sigmoid(np.dot(tx,w))) + (1-y)*np.log(1-sigmoid(np.dot(tx,w))))
     
 def calculate_logistic_gradient(y, tx, w):
     """
@@ -217,10 +217,10 @@ def calculate_logistic_gradient(y, tx, w):
 
     """
     # ***************************************************
-    N = len(y)
-    grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
+    #N = len(y)
+    #grad = np.dot(np.transpose(tx), sigmoid(np.dot(tx,w))-y)/N
     # ***************************************************
-    return grad
+    return tx.transpose().dot(sigmoid(tx.dot(w))-y)/y.shape[0]
 
 def calculate_logistic_gradient_tuning(y, tx, w, w0, w1):
     """
