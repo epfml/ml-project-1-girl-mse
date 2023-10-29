@@ -201,7 +201,7 @@ def calculate_logistic_loss(y, tx, w):
     N = len(y)
     loss = -np.dot(np.transpose(y), np.dot(tx,w)) + np.sum(np.log(np.ones(N,) + np.exp(np.dot(tx,w))))
     loss /= N
-    return loss
+    return loss.item()
     
 def calculate_logistic_gradient(y, tx, w):
     """
