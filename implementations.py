@@ -16,6 +16,7 @@ def compute_mse_loss(y, tx, w):
     """
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == w.shape[0]
+    assert y.ndim == 1
     error = y - np.dot(tx, w)
     loss = 1/(2*np.shape(error)[0])*np.dot(error.T, error)
     
@@ -36,6 +37,7 @@ def compute_gradient(y, tx, w):
     """
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == w.shape[0]
+    assert y.ndim == 1
     error = y - np.dot(tx, w)
     grad = (-1/np.shape(error)[0])*np.dot(tx.T, error)
     
@@ -60,6 +62,7 @@ def mean_squared_error_gd(y, tx, initial_w,  max_iters, gamma):
     #Define parameters to store w and loss
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == initial_w.shape[0]
+    assert y.ndim == 1
     ws = [initial_w]
     losses = []
     w = initial_w
