@@ -86,8 +86,6 @@ def compute_stoch_gradient(y, tx, w):
         grad: vector of shape=(D,)
     """
     error = y - np.dot(tx, w)
-    if len(np.shape(error)) == 1:
-        error = error.item()
     grad = (-1)*np.dot(tx.T, error)
     
     return grad
