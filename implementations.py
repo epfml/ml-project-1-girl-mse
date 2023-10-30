@@ -114,7 +114,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         # We take one random sample for SGD
         index = np.random.randint(np.shape(tx)[0])
         x_sample = tx[index:,:]
-        y_sample = y[:,:index+1]
+        y_sample = y[index:,:]
         loss = compute_mse_loss(y, tx, w)
         grad = compute_stoch_gradient(y_sample, x_sample, w)
         w = w - gamma*grad
