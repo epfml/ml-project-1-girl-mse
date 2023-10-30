@@ -86,8 +86,6 @@ def compute_stoch_gradient(y, tx, w):
         grad: vector of shape=(D,)
     """
     error = y - np.dot(tx, w)
-    if len(error)==1:
-        error = error.item()
     grad = (-1)*np.dot(tx.T, error)
     
     return grad
@@ -115,9 +113,8 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     for n_iter in range(max_iters):
         # We take one random sample for SGD
         index = np.random.randint(np.shape(tx)[0])
-        x_sample = tx[index, :]
-        #print(x_sample)
-        y_sample = y[index]
+        x_sample = tx[index:,:]
+        y_sample = y[:,:index+1]
         loss = compute_mse_loss(y, tx, w)
         grad = compute_stoch_gradient(y_sample, x_sample, w)
         w = w - gamma*grad
